@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Client Measurement Keeper</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff3f7;--card:#ffffff;--ink:#3a1a28;--muted:#7d5a6b;--rose:#b8316a;--rose-ink:#ffffff;--gold:#a8812f;--line:#f0cddb;--soft:#fde4ee;--warn:#b3261e;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b0f15;--card:#2a1722;--ink:#fbeaf1;--muted:#d1a9bb;--rose:#f06fa3;--rose-ink:#2a0f1b;--gold:#d9b86a;--line:#4a2a3a;--soft:#3a2030;--warn:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1b0f15;--card:#2a1722;--ink:#fbeaf1;--muted:#d1a9bb;--rose:#f06fa3;--rose-ink:#2a0f1b;--gold:#d9b86a;--line:#4a2a3a;--soft:#3a2030;--warn:#ff8a80;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 Inter,system-ui,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:18px 16px 60px}
+h1,h2{font-family:"Playfair Display",Georgia,serif;margin:0}
+h1{font-size:30px;line-height:1.15;color:var(--rose)}
+.tag{color:var(--muted);margin:6px 0 18px;font-size:15px}
+.rule{height:3px;width:64px;background:var(--gold);border-radius:2px;margin:10px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+h2{font-size:21px;margin-bottom:12px}
+label{display:block;font-size:14px;font-weight:600;margin:10px 0 4px;color:var(--muted)}
+input,textarea{width:100%;font:inherit;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+input:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+textarea{min-height:76px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.hint{font-size:13px;color:var(--muted);margin:4px 0 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0 18px;border-radius:12px;border:1.5px solid var(--rose);background:transparent;color:var(--rose);font:600 16px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.btn.main{background:var(--rose);color:var(--rose-ink)}
+.btn.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}
+.btn.danger{border-color:var(--warn);color:var(--warn)}
+.btn.danger.sure{background:var(--warn);color:var(--card)}
+.btn[aria-disabled="true"]{opacity:.45;pointer-events:none}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.photo-prev{display:flex;align-items:center;gap:12px;margin-top:6px}
+.photo-prev img{width:84px;height:84px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.client{border-left:5px solid var(--rose)}
+.client-top{display:flex;gap:12px;align-items:flex-start}
+.client-top img{width:76px;height:76px;object-fit:cover;border-radius:12px;border:1px solid var(--line);flex:none}
+.name{font:700 21px "Playfair Display",Georgia,serif}
+.phone,.date{color:var(--muted);font-size:15px}
+.badge{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:99px;background:var(--soft);color:var(--warn);font-size:13px;font-weight:600}
+.badge.ok{color:var(--gold)}
+.m{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.m div{background:var(--soft);border-radius:10px;padding:8px;text-align:center}
+.m b{display:block;font-size:19px;color:var(--rose)}
+.m span{font-size:13px;color:var(--muted)}
+.notes{background:var(--bg);border-radius:10px;padding:10px;font-size:15px;white-space:pre-wrap}
+.m.mon b{color:var(--gold)}
+.m.mon .owe b{color:var(--warn)}
+.paylog{font-size:14px;color:var(--muted);margin:-4px 0 6px}
+.payrow{display:flex;gap:10px;margin:10px 0}
+.payrow input{flex:1;min-width:0}
+.seg{display:flex;gap:10px;margin:6px 0 4px}
+.seg .btn{flex:1}
+.seg .btn.on{background:var(--rose);color:var(--rose-ink)}
+.grp{font:700 17px "Playfair Display",Georgia,serif;color:var(--gold);margin:18px 0 0;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.grp2{font-weight:600;color:var(--gold);font-size:14px;margin-top:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{min-height:44px;padding:0 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:600 15px Inter,system-ui,sans-serif;cursor:pointer}
+.chip.on{background:var(--rose);border-color:var(--rose);color:var(--rose-ink)}
+.gtag{display:inline-block;margin:6px 6px 0 0;padding:2px 10px;border-radius:99px;background:var(--soft);color:var(--rose);font-size:13px;font-weight:600}
+.empty{text-align:center;color:var(--muted);padding:28px 8px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:15px;max-width:90%;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+details summary{font-weight:600;cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--rose)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Client Measurement Keeper</h1>
+  <div class="rule"></div>
+  <p class="tag">Every client’s measurements, kept safe on this phone. All sizes are in inches.</p>
+
+  <form class="card" id="form" autocomplete="off" onsubmit="return false">
+    <h2 id="formTitle">Add a new client</h2>
+    <label for="name">Client name</label>
+    <input id="name" placeholder="e.g. Mrs Adaeze Okafor">
+    <label for="phone">Phone number</label>
+    <input id="phone" type="tel" inputmode="tel" placeholder="e.g. 0803 123 4567">
+    <label style="margin-top:14px">Client type</label>
+    <div class="seg" role="group" aria-label="Client type">
+      <button type="button" class="btn" id="sexF">Female</button>
+      <button type="button" class="btn" id="sexM">Male</button>
+    </div>
+    <div id="gfields"></div>
+    <div id="mfields"></div>
+    <label for="notes">Style notes</label>
+    <textarea id="notes" placeholder="Fabric, neckline, lining, anything the client asked for"></textarea>
+    <label for="due">Collection date</label>
+    <input id="due" type="date">
+    <label for="price">Total price (₦)</label>
+    <input id="price" inputmode="decimal" placeholder="e.g. 45000">
+    <label for="deposit">Amount paid so far (₦)</label>
+    <input id="deposit" inputmode="decimal" placeholder="Deposit collected today">
+    <p class="hint" id="balHint"></p>
+    <label for="photo">Style picture</label>
+    <input id="photo" type="file" accept="image/*">
+    <div class="photo-prev" id="prev"></div>
+    <div class="row">
+      <button class="btn main" id="saveBtn" type="button">Save client</button>
+      <button class="btn" id="cancelBtn" type="button" hidden>Cancel edit</button>
+    </div>
+  </form>
+
+  <div class="card">
+    <label for="search" style="margin-top:0">Search clients</label>
+    <input id="search" type="search" placeholder="Name, phone or garment (e.g. agbada)">
+    <div class="chips" id="filters">
+      <button type="button" class="chip on" data-f="all" aria-pressed="true">All</button>
+      <button type="button" class="chip" data-f="F" aria-pressed="false">Female</button>
+      <button type="button" class="chip" data-f="M" aria-pressed="false">Male</button>
+      <button type="button" class="chip" data-f="owing" aria-pressed="false">Owing balance</button>
+      <button type="button" class="chip" data-f="overdue" aria-pressed="false">Overdue</button>
+    </div>
+    <p class="hint" id="count"></p>
+  </div>
+
+  <div id="sum"></div>
+  <div id="list" aria-live="polite"></div>
+
+  <details class="card">
+    <summary>Backup and restore</summary>
+    <p class="hint">Your clients are saved only on this phone. If you change phones or clear the browser, they are lost. Tap “Show backup”, copy the code, and keep it safe in WhatsApp “Saved messages” or Notes.</p>
+    <textarea id="bk" placeholder="Backup code appears here. To restore, paste a code here and tap Restore."></textarea>
+    <div class="row">
+      <button class="btn" id="showBk" type="button">Show backup</button>
+      <button class="btn" id="copyBk" type="button">Copy backup</button>
+      <button class="btn danger" id="restoreBk" type="button">Restore</button>
+    </div>
+    <p class="hint">Restore replaces everything currently saved on this phone.</p>
+  </details>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+var KEY = 'tailor_clients_v1';
+var clients = [], editId = null, photoData = '', pendingDel = null, pendingRestore = false, payingId = null;
+var $ = function (id) { return document.getElementById(id); };
+var FIELDS = ['name','phone','notes','due','price','deposit'];
+var LBL = {bust:'Bust',ubust:'Under bust',bpoint:'Bust point',neck:'Neck',shoulder:'Shoulder',s2w:'Shoulder to waist',waist:'Waist',hip:'Hip',length:'Top or dress length',arm:'Round arm',rsleeve:'Round sleeve',sleeve:'Sleeve length',skirt:'Skirt length',thigh:'Thigh',knee:'Knee',ankle:'Ankle',inseam:'Inseam',trouser:'Trouser length',agbadaL:'Agbada length',agbadaW:'Agbada width',cap:'Cap size'};
+var MALE_LBL = {bust:'Chest',length:'Shirt or top length'};
+var GROUPS = {
+  F: [['Upper body',['bust','ubust','bpoint','neck','shoulder','s2w','waist','hip','length']],['Sleeves',['arm','rsleeve','sleeve']],['Skirt and trousers',['skirt','thigh','knee','ankle','inseam','trouser']]],
+  M: [['Upper body',['neck','bust','shoulder','s2w','waist','hip','length']],['Sleeves',['arm','rsleeve','sleeve']],['Trousers',['thigh','knee','ankle','inseam','trouser']]]
+};
+var sex = 'F', mvals = {}, garments = [], gOther = '';
+var filt = 'all';
+var GARM = {
+  F: ['Gown','Iro and buba','Skirt and blouse','Kaftan','Boubou','Corset dress','Jumpsuit','Trouser suit'],
+  M: ['Agbada','Senator','Kaftan','Suit','Buba and sokoto','Shirt','Trousers']
+};
+function groupsFor(s, gs) {
+  var g = GROUPS[s].slice();
+  if (s === 'M' && gs.indexOf('Agbada') !== -1) g.push(['Agbada', ['agbadaL', 'agbadaW', 'cap']]);
+  return g;
+}
+function buildG() {
+  var h = '<label>Garment type (tap all that apply)</label><div class="chips">';
+  GARM[sex].forEach(function (g) { var on = garments.indexOf(g) !== -1; h += '<button type="button" class="chip' + (on ? ' on' : '') + '" data-g="' + esc(g) + '" aria-pressed="' + on + '">' + esc(g) + '</button>'; });
+  h += '</div><label for="gOther">Other garment (optional)</label><input id="gOther" placeholder="e.g. Wedding gown, school uniform" value="' + esc(gOther) + '">';
+  $('gfields').innerHTML = h;
+}
+function gtags(c) {
+  var all = (c.garments || []).concat(c.gOther ? [c.gOther] : []);
+  return all.map(function (g) { return '<span class="gtag">' + esc(g) + '</span>'; }).join('');
+}
+function lblFor(k, s) { return (s === 'M' && MALE_LBL[k]) || LBL[k]; }
+function buildM() {
+  var h = '';
+  groupsFor(sex, garments).forEach(function (g) {
+    h += '<h3 class="grp">' + g[0] + '</h3><div class="grid">';
+    g[1].forEach(function (k) { h += '<div><label for="m_' + k + '">' + lblFor(k, sex) + '</label><input id="m_' + k + '" data-k="' + k + '" inputmode="decimal" value="' + esc(mvals[k] || '') + '"></div>'; });
+    h += '</div>';
+  });
+  $('mfields').innerHTML = h;
+  ['F', 'M'].forEach(function (s) { var b = $('sex' + s); b.classList.toggle('on', sex === s); b.setAttribute('aria-pressed', sex === s ? 'true' : 'false'); });
+}
+function measHtml(c) {
+  var s = c.sex === 'M' ? 'M' : 'F', out = '';
+  groupsFor(s, c.garments || []).forEach(function (g) {
+    var items = g[1].filter(function (k) { return c[k]; });
+    if (!items.length) return;
+    out += '<div class="grp2">' + g[0] + '</div><div class="m">' + items.map(function (k) { return '<div><b>' + esc(c[k]) + '</b><span>' + lblFor(k, s) + '</span></div>'; }).join('') + '</div>';
+  });
+  return out;
+}
+
+function load() { try { clients = JSON.parse(localStorage.getItem(KEY) || '[]'); if (!Array.isArray(clients)) clients = []; } catch (e) { clients = []; } }
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(clients)); return true; }
+  catch (e) { toast('Could not save. Phone storage may be full. Try a smaller photo or make a backup.'); return false; }
+}
+function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(function () { t.classList.remove('show'); }, 3200); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function num(v) { var n = parseFloat(String(v || '').replace(/,/g, '')); return isNaN(n) ? 0 : n; }
+function naira(n) { return '₦' + Math.round(n).toLocaleString('en-NG'); }
+function paidOf(c) { return num(c.deposit) + (c.pays || []).reduce(function (a, p) { return a + num(p.amt); }, 0); }
+function waTo(c, text) {
+  var d = String(c.phone || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.indexOf('234') !== 0) { d = d.charAt(0) === '0' ? '234' + d.slice(1) : '234' + d; }
+  return 'https://wa.me/' + d + '?text=' + encodeURIComponent(text);
+}
+function updHint() {
+  var ed = clients.filter(function (c) { return c.id === editId; })[0];
+  var extra = ed && ed.pays ? ed.pays.reduce(function (a, p) { return a + num(p.amt); }, 0) : 0;
+  var pr = num($('price').value), bal = pr - num($('deposit').value) - extra;
+  $('balHint').textContent = pr ? (bal >= 0 ? 'Balance remaining: ' + naira(bal) : 'Overpaid by ' + naira(-bal)) : 'The balance is worked out for you once you type the price.';
+}
+function moneyHtml(c) {
+  var pr = num(c.price), paid = paidOf(c); if (!pr && !paid) return '';
+  var bal = pr - paid, owe = bal > 0, lbl = owe ? 'Balance remaining' : (bal === 0 ? 'Fully paid' : 'Overpaid');
+  var h = '<div class="m mon"><div><b>' + naira(pr) + '</b><span>Total price</span></div><div><b>' + naira(paid) + '</b><span>Paid so far</span></div><div class="' + (owe ? 'owe' : '') + '"><b>' + naira(Math.abs(bal)) + '</b><span>' + lbl + '</span></div></div>';
+  var log = [];
+  if (num(c.deposit)) log.push('Deposit: ' + naira(num(c.deposit)));
+  (c.pays || []).forEach(function (p) { var d = p.date ? new Date(p.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Payment'; log.push(d + ': ' + naira(num(p.amt))); });
+  if (log.length) h += '<div class="paylog">' + log.join('<br>') + '</div>';
+  if (payingId === c.id) {
+    h += '<div class="payrow"><input id="payAmt" inputmode="decimal" aria-label="Amount paid now" placeholder="Amount paid now (₦)"><button class="btn main" data-act="savepay" data-id="' + c.id + '" type="button">Save</button><button class="btn" data-act="cancelpay" data-id="' + c.id + '" type="button">Cancel</button></div>';
+  }
+  var extras = '';
+  if (owe && c.phone) extras += '<a class="btn" href="' + waTo(c, 'Hello ' + c.name + ', your balance for the outfit is ' + naira(bal) + '. Thank you.') + '" target="_blank" rel="noopener">Remind about balance</a>';
+  if ((c.pays || []).length) extras += '<button class="btn" data-act="undo" data-id="' + c.id + '" type="button">Undo last payment</button>';
+  if (extras) h += '<div class="row" style="margin:0 0 10px">' + extras + '</div>';
+  return h;
+}
+function handlePay(act, id) {
+  var c = clients.filter(function (x) { return x.id === id; })[0]; if (!c) return;
+  if (act === 'pay') { payingId = id; render(); var el = $('payAmt'); if (el) el.focus(); return; }
+  if (act === 'cancelpay') { payingId = null; render(); return; }
+  var old = JSON.stringify(c.pays || []);
+  if (act === 'savepay') {
+    var a = num($('payAmt').value);
+    if (a <= 0) { toast('Type the amount paid.'); return; }
+    c.pays = (c.pays || []).concat([{ amt: a, date: new Date().toISOString().slice(0, 10) }]); payingId = null;
+  }
+  if (act === 'undo') { c.pays = (c.pays || []).slice(0, -1); }
+  if (save()) toast(act === 'undo' ? 'Last payment removed.' : 'Payment saved.'); else c.pays = JSON.parse(old);
+  render();
+}
+function waLink(c) {
+  var d = String(c.phone || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.indexOf('234') !== 0) { d = d.charAt(0) === '0' ? '234' + d.slice(1) : '234' + d; }
+  return 'https://wa.me/' + d + '?text=' + encodeURIComponent('Hello ' + c.name + ', your outfit is ready for collection.');
+}
+function dueInfo(due) {
+  if (!due) return '';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var p = due.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2]);
+  var nice = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  var diff = Math.round((d - today) / 86400000), b = '';
+  if (diff < 0) b = '<span class="badge">Overdue</span>';
+  else if (diff === 0) b = '<span class="badge">Due today</span>';
+  else if (diff <= 3) b = '<span class="badge ok">In ' + diff + ' day' + (diff > 1 ? 's' : '') + '</span>';
+  return 'Collection: ' + nice + b;
+}
+
+function render() {
+  var tp = 0, tpaid = 0, owed = 0;
+  clients.forEach(function (c) { tp += num(c.price); tpaid += paidOf(c); owed += Math.max(num(c.price) - paidOf(c), 0); });
+  $('sum').innerHTML = tp ? '<div class="card"><h2>Money summary</h2><div class="m mon" style="margin-bottom:0"><div><b>' + naira(tp) + '</b><span>Total orders</span></div><div><b>' + naira(tpaid) + '</b><span>Collected</span></div><div class="owe"><b>' + naira(owed) + '</b><span>Still owed</span></div></div></div>' : '';
+  var q = $('search').value.trim().toLowerCase();
+  var qd = q.replace(/\s/g, '');
+  var now = new Date(), today = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
+  var rows = clients.filter(function (c) {
+    var hay = (c.name + ' ' + (c.phone || '') + ' ' + (c.phone || '').replace(/\s/g, '') + ' ' + (c.garments || []).join(' ') + ' ' + (c.gOther || '')).toLowerCase();
+    if (q && hay.indexOf(q) === -1 && hay.indexOf(qd) === -1) return false;
+    if (filt === 'F') return c.sex !== 'M';
+    if (filt === 'M') return c.sex === 'M';
+    if (filt === 'owing') return num(c.price) - paidOf(c) > 0;
+    if (filt === 'overdue') return !!c.due && c.due < today;
+    return true;
+  });
+  $('count').textContent = clients.length ? rows.length + ' of ' + clients.length + ' clients shown' : '';
+  rows.sort(function (a, b) { return (a.due || '9999').localeCompare(b.due || '9999'); });
+  if (!rows.length) {
+    $('list').innerHTML = '<div class="card empty">' + (clients.length ? 'No client matches your search or filter.' : 'No clients yet. Fill in the form above and tap “Save client”.') + '</div>';
+    return;
+  }
+  $('list').innerHTML = rows.map(function (c) {
+    var meas = measHtml(c);
+    var wa = waLink(c);
+    return '<div class="card client"><div class="client-top">' +
+      (c.photo ? '<img src="' + c.photo + '" alt="Style picture for ' + esc(c.name) + '">' : '') +
+      '<div><div class="name">' + esc(c.name) + '</div><div class="phone">' + (c.sex === 'M' ? 'Male client' : 'Female client') + ', ' + esc(c.phone || 'No phone saved') + '</div><div class="date">' + dueInfo(c.due) + '</div>' + gtags(c) + '</div></div>' +
+      meas + moneyHtml(c) +
+      (c.notes ? '<div class="notes">' + esc(c.notes) + '</div>' : '') +
+      '<div class="row">' +
+      (wa ? '<a class="btn wa" href="' + wa + '" target="_blank" rel="noopener">Message Client on WhatsApp</a>' : '<a class="btn wa" aria-disabled="true">Message Client on WhatsApp</a>') +
+      (num(c.price) > 0 ? '<button class="btn" data-act="pay" data-id="' + c.id + '" type="button">Add payment</button>' : '') +
+      '<button class="btn" data-act="edit" data-id="' + c.id + '" type="button">Edit</button>' +
+      '<button class="btn danger' + (pendingDel === c.id ? ' sure' : '') + '" data-act="del" data-id="' + c.id + '" type="button">' + (pendingDel === c.id ? 'Tap again to delete' : 'Delete') + '</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function resetForm() {
+  FIELDS.forEach(function (f) { $(f).value = ''; });
+  mvals = {}; sex = 'F'; garments = []; gOther = ''; buildG(); buildM();
+  $('photo').value = ''; photoData = ''; editId = null;
+  $('prev').innerHTML = ''; $('formTitle').textContent = 'Add a new client'; updHint();
+  $('saveBtn').textContent = 'Save client'; $('cancelBtn').hidden = true;
+}
+function showPrev() {
+  $('prev').innerHTML = photoData ? '<img src="' + photoData + '" alt="Selected style picture"><button class="btn danger" id="rmPhoto" type="button">Remove photo</button>' : '';
+}
+
+$('photo').addEventListener('change', function (e) {
+  var f = e.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function () {
+    var img = new Image();
+    img.onload = function () {
+      var max = 500, s = Math.min(1, max / Math.max(img.width, img.height));
+      var cv = document.createElement('canvas'); cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      photoData = cv.toDataURL('image/jpeg', 0.7); showPrev();
+    };
+    img.onerror = function () { toast('That file could not be read as a picture.'); };
+    img.src = r.result;
+  };
+  r.readAsDataURL(f);
+});
+$('prev').addEventListener('click', function (e) { if (e.target.id === 'rmPhoto') { photoData = ''; $('photo').value = ''; showPrev(); } });
+
+$('saveBtn').addEventListener('click', function () {
+  var name = $('name').value.trim();
+  if (!name) { toast('Please type the client’s name first.'); $('name').focus(); return; }
+  var prevRec = clients.filter(function (c) { return c.id === editId; })[0];
+  var rec = { id: editId || String(Date.now()), photo: photoData, pays: prevRec && prevRec.pays ? prevRec.pays : [] };
+  FIELDS.forEach(function (f) { rec[f] = $(f).value.trim(); });
+  rec.sex = sex;
+  rec.garments = garments.filter(function (g) { return GARM[sex].indexOf(g) !== -1; }); rec.gOther = gOther.trim();
+  groupsFor(sex, rec.garments).forEach(function (g) { g[1].forEach(function (k) { rec[k] = String(mvals[k] || '').trim(); }); });
+  var old = clients.slice();
+  if (editId) clients = clients.map(function (c) { return c.id === editId ? rec : c; }); else clients.unshift(rec);
+  if (!save()) { clients = old; return; }
+  toast(editId ? 'Client updated.' : 'Client saved.'); resetForm(); render();
+});
+$('cancelBtn').addEventListener('click', function () { resetForm(); });
+$('search').addEventListener('input', render);
+$('filters').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-f]'); if (!b) return;
+  filt = b.getAttribute('data-f');
+  Array.prototype.forEach.call($('filters').querySelectorAll('button'), function (x) { var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  render();
+});
+
+$('list').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-act]'); if (!b) return;
+  var id = b.getAttribute('data-id'), act = b.getAttribute('data-act');
+  if (act === 'pay' || act === 'savepay' || act === 'cancelpay' || act === 'undo') { handlePay(act, id); return; }
+  if (b.getAttribute('data-act') === 'edit') {
+    var c = clients.filter(function (x) { return x.id === id; })[0]; if (!c) return;
+    FIELDS.forEach(function (f) { $(f).value = c[f] || ''; });
+    sex = c.sex === 'M' ? 'M' : 'F'; mvals = {}; garments = (c.garments || []).slice(); gOther = c.gOther || '';
+    Object.keys(LBL).forEach(function (k) { mvals[k] = c[k] || ''; });
+    buildG(); buildM();
+    photoData = c.photo || ''; editId = id; showPrev(); updHint();
+    $('formTitle').textContent = 'Edit client'; $('saveBtn').textContent = 'Save changes'; $('cancelBtn').hidden = false;
+    $('form').scrollIntoView({ behavior: 'smooth' });
+  } else {
+    if (pendingDel !== id) { pendingDel = id; render(); setTimeout(function () { pendingDel = null; render(); }, 4000); return; }
+    var old = clients.slice(); clients = clients.filter(function (x) { return x.id !== id; }); pendingDel = null;
+    if (save()) toast('Client deleted.'); else clients = old;
+    render();
+  }
+});
+
+$('showBk').addEventListener('click', function () { $('bk').value = JSON.stringify(clients); toast('Backup ready. Tap Copy backup.'); });
+$('copyBk').addEventListener('click', function () {
+  var t = $('bk'); if (!t.value) t.value = JSON.stringify(clients);
+  t.select(); t.setSelectionRange(0, t.value.length);
+  try { document.execCommand('copy'); toast('Backup copied. Paste it somewhere safe.'); } catch (e) { toast('Press and hold the text to copy it.'); }
+});
+$('restoreBk').addEventListener('click', function () {
+  var raw = $('bk').value.trim(); if (!raw) { toast('Paste your backup code in the box first.'); return; }
+  var data; try { data = JSON.parse(raw); } catch (e) { toast('That backup code is not valid.'); return; }
+  if (!Array.isArray(data)) { toast('That backup code is not valid.'); return; }
+  if (!pendingRestore) { pendingRestore = true; this.textContent = 'Tap again to confirm'; var self = this; setTimeout(function () { pendingRestore = false; self.textContent = 'Restore'; }, 4000); return; }
+  pendingRestore = false; this.textContent = 'Restore';
+  var old = clients; clients = data; if (save()) { toast('Backup restored.'); render(); } else clients = old;
+});
+
+$('price').addEventListener('input', updHint);
+$('deposit').addEventListener('input', updHint);
+$('mfields').addEventListener('input', function (e) { var k = e.target.getAttribute('data-k'); if (k) mvals[k] = e.target.value; });
+$('sexF').addEventListener('click', function () { sex = 'F'; buildG(); buildM(); });
+$('sexM').addEventListener('click', function () { sex = 'M'; buildG(); buildM(); });
+$('gfields').addEventListener('input', function (e) { if (e.target.id === 'gOther') gOther = e.target.value; });
+$('gfields').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-g]'); if (!b) return;
+  var g = b.getAttribute('data-g'), i = garments.indexOf(g);
+  if (i === -1) garments.push(g); else garments.splice(i, 1);
+  buildG(); buildM();
+});
+buildG(); buildM();
+load(); render(); updHint();
+</script>
+</body>
+</html>
